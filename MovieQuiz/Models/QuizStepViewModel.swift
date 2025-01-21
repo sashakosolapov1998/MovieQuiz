@@ -6,3 +6,11 @@
 //
 
 import Foundation
+import UIKit
+
+
+struct QuizStepViewModel {
+    let Image : UIImage
+    let Question : String
+    let questionNumber : String
+}
