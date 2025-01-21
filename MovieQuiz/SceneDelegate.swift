@@ -10,6 +10,8 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         options connectionOptions: UIScene.ConnectionOptions
     ) {
         guard (scene as? UIWindowScene) != nil else { return }
+        
+ 
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {}
