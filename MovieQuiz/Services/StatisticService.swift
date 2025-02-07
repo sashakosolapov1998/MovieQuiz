@@ -18,7 +18,8 @@ final class StatisticService {
         case gamesCount
     }
 }
-    extension StatisticService: StatisticServiceProtocol {
+extension StatisticService: StatisticServiceProtocol {
+
         var gamesCount: Int {
             get {
                 // читаем значение из UserDefaults, и используем storage вместо UserDefaults

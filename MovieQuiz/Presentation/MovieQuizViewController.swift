@@ -9,18 +9,46 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // Здесь хранятся ссылки на элементы интерфейса, подключённые через Interface Builder (например, imageView, textLabel, counterLabel). Это связывает элементы интерфейса с кодом, позволяя программно обновлять их.
     
     @IBOutlet private var imageView: UIImageView!
-    
     @IBOutlet private weak var textLabel: UILabel!
-    
     @IBOutlet private var counterLabel: UILabel!
+    @IBOutlet private var activityIndicator: UIActivityIndicatorView!
+    
     
     // MARK: - Properies
     //Здесь объявляются свойства, необходимые для управления состоянием
+    
+    //Показываем индикатор загрузки и его состояния
+    private func showLoadingIndicator() {
+        activityIndicator.isHidden = false // говорим, что индикатор загрузки не скрыт
+        activityIndicator.startAnimating() // включаем анимацию
+    }
+    //Скрываем индикатор загрузки
+    private func hideLoadingIndicator() {
+        activityIndicator.isHidden = true
+        activityIndicator.stopAnimating()
+    }
+    //Алерт с ошибкой
+    private func showNetworkError(message: String) {
+        hideLoadingIndicator()
+        
+        let model = AlertModel(title: "Ошибка",
+                               message: message,
+                               buttonText: "Попробовать еще раз") { [weak self] in
+            guard let self = self else { return }
+            
+            self.currentQuestionIndex = 0
+            self.correctAnswers = 0
+            
+            self.questionFactory.requestNextQuestion()
+        }
+        
+        alertPresenter.showAlert(with: model)
+    }
     //добавляем свойство типа StatisticServiceProtocol
     private var statisticService: StatisticServiceProtocol!
     //массив вопросов викторины вынесли в QuizFactory
     private let questionsAmount: Int = 10
-    private var questionFactory: QuestionFactoryProtocol = QuestionFactory()
+    private var questionFactory: QuestionFactoryProtocol!
     private var currentQuestion: QuizQuestion?
     
     //добавили alertPresenter
@@ -40,15 +68,14 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
        
         imageView.contentMode = .scaleAspectFill
         
-        let questionFactory = QuestionFactory()
-        questionFactory.setup(delegate: self)
-        self.questionFactory = questionFactory
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         
-        questionFactory.requestNextQuestion()
+        showLoadingIndicator()
+        questionFactory.loadData()
     }
     
     // MARK: - QuestionFactoryDelegate
-    
+
     func didReceiveNextQuestion(question: QuizQuestion?) {
         // проверка, что вопрос не nil
         guard let question = question else {
@@ -62,17 +89,25 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             self?.show(quiz: viewModel)
         }
     }
+    
+    func didLoadDataFromServer() {
+        activityIndicator.isHidden = true // скрываем индикатор загрузки
+            questionFactory.requestNextQuestion()
+    }
+
+    func didFailToLoadData(with error: Error) {
+        showNetworkError(message: error.localizedDescription) // возьмём в качестве сообщения описание ошибки
+    }
         
         private func convert(model: QuizQuestion) ->  QuizStepViewModel {
-            let questionStep = QuizStepViewModel (
-                Image: UIImage(named: model.image) ?? UIImage(),
-                Question: model.text,
-                questionNumber: "\(currentQuestionIndex + 1) /\(questionsAmount)")
-            return questionStep
+            return QuizStepViewModel(
+                   image: UIImage(data: model.image) ?? UIImage(),
+                   question: model.text,
+                   questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
         }
         private func show(quiz step: QuizStepViewModel){
-            imageView.image = step.Image
-            textLabel.text = step.Question
+            imageView.image = step.image
+            textLabel.text = step.question
             counterLabel.text = step.questionNumber
             
             // Сбрасываем цвет рамки на прозрачный при показе нового вопроса
