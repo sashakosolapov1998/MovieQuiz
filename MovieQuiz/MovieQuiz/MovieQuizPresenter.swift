@@ -8,12 +8,23 @@
 import Foundation
 import UIKit
 
+// MARK: - MovieQuizPresenter
 
 final class MovieQuizPresenter: QuestionFactoryDelegate {
-    var questionFactory: QuestionFactoryProtocol? // добавлено
-    weak var viewController: MovieQuizViewController?
     
-init(viewController: MovieQuizViewController) {
+    // MARK: - Properties
+    private let statisticService: StatisticServiceProtocol!
+        private var questionFactory: QuestionFactoryProtocol?
+    private weak var viewController: MovieQuizViewControllerProtocol?
+
+        private var currentQuestion: QuizQuestion?
+        private let questionsAmount: Int = 10
+        private var currentQuestionIndex: Int = 0
+        private var correctAnswers: Int = 0
+
+    // MARK: - Initialization
+    
+    init(viewController: MovieQuizViewControllerProtocol) {
     self.viewController = viewController
     
     statisticService = StatisticService()
@@ -23,13 +34,8 @@ init(viewController: MovieQuizViewController) {
     questionFactory?.loadData()
     }
     
-    
-    let questionsAmount: Int = 10
-    private var currentQuestionIndex = 0
-    var currentQuestion: QuizQuestion?
-    var correctAnswers: Int = 0 // добавлено
-    private let statisticService: StatisticServiceProtocol! // добавлено
-    
+
+    // MARK: - QuestionFactoryDelegate
     
     func didLoadDataFromServer() {
             viewController?.hideLoadingIndicator()
@@ -58,7 +64,9 @@ init(viewController: MovieQuizViewController) {
 
         return resultMessage
     }
-    func proceedWithAnswer(isCorrectAnswer: Bool) { // новый метод (было showAnswerResult)
+    
+    // MARK: - FUNC
+    private func proceedWithAnswer(isCorrectAnswer: Bool) { // новый метод (было showAnswerResult)
         didAnswer(isCorrectAnswer: isCorrectAnswer) // фиксируем ответ
 
         viewController?.highlightImageBorder(isCorrectAnswer: isCorrectAnswer) // вызываем UI-метод
@@ -68,8 +76,6 @@ init(viewController: MovieQuizViewController) {
             self.proceedToNextQuestionOrResults() // вызываем следующий шаг
         }
     }
-    
-   
     
     func isLastQuestion() -> Bool {
             currentQuestionIndex == questionsAmount - 1
@@ -81,17 +87,17 @@ init(viewController: MovieQuizViewController) {
         questionFactory?.requestNextQuestion()// обнуляем счётчик при перезапуске викторины
         }
         
-    func switchToNextQuestion() {
+    private func switchToNextQuestion() {
             currentQuestionIndex += 1
         }
     
-    func didAnswer(isCorrectAnswer: Bool) { // новый метод
+    private func didAnswer(isCorrectAnswer: Bool) { // новый метод
           if isCorrectAnswer {
               correctAnswers += 1
           }
       }
     
-    func proceedToNextQuestionOrResults() { // новый метод
+    private func proceedToNextQuestionOrResults() { // новый метод
             if self.isLastQuestion() {
                 let text = "Вы ответили на \(correctAnswers) из \(questionsAmount), попробуйте ещё раз!"
 

@@ -1,12 +1,9 @@
 import UIKit
 
     // MARK: - Controller
-    // управляет отображением текущего вопроса, реагирует на нажатия кнопок и обновляет интерфейс в зависимости от действий пользователя.
-final class MovieQuizViewController: UIViewController {
+final class MovieQuizViewController: UIViewController, MovieQuizViewControllerProtocol {
     
-    
-    // MARK: - Outlets
-    // Здесь хранятся ссылки на элементы интерфейса, подключённые через Interface Builder (например, imageView, textLabel, counterLabel). Это связывает элементы интерфейса с кодом, позволяя программно обновлять их.
+    // MARK: - Outlets and var
     
     @IBOutlet private var imageView: UIImageView!
     @IBOutlet private weak var textLabel: UILabel!
@@ -14,57 +11,34 @@ final class MovieQuizViewController: UIViewController {
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
     
     private var presenter: MovieQuizPresenter!
+    private var alertPresenter: AlertPresenter!
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         presenter = MovieQuizPresenter(viewController: self)
-        
-        // Инициализируем AlertPresenter
         alertPresenter = AlertPresenter(viewController: self)
         
         imageView.contentMode = .scaleAspectFill
-        
     }
-    
-    
     // MARK: - Actions
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         presenter.noButtonClicked()
     }
     
-    
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         presenter.yesButtonClicked()
     }
     
-    // MARK: - Private functions
-    
-    
+    // MARK: - functions
     func show(quiz step: QuizStepViewModel){
         imageView.image = step.image
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
-        
-        // Сбрасываем цвет рамки на прозрачный при показе нового вопроса
+    
         imageView.layer.borderColor = UIColor.clear.cgColor
     }
     
-    /* УДАЛИМ ЭТОТ МЕТОД
-    func showAnswerResult(isCorrect: Bool) {
-        presenter.didAnswer(isCorrectAnswer: isCorrect)
-        
-        imageView.layer.masksToBounds = true
-        imageView.layer.borderWidth = 8
-        imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
-        
-        
-        // запускаем задачу через 1 секунду с помощью диспетчера задач
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in guard let self = self else { return }
-            self.presenter.showNextQuestionOrResults()
-        }
-    }
-    */
     func highlightImageBorder(isCorrectAnswer: Bool) { // новый метод
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
@@ -72,11 +46,8 @@ final class MovieQuizViewController: UIViewController {
     }
     
     func showResults(quiz result: QuizResultsViewModel) {
-      
-        let message = presenter.makeResultsMessage() // исправлено, теперь Presenter формирует текст
-        
-        // Создаём модель для AlertPresenter
-        let alertModel = AlertModel(
+    let message = presenter.makeResultsMessage()
+    let alertModel = AlertModel(
             title: result.title,
             message: message,
             buttonText: result.buttonText,
@@ -84,28 +55,22 @@ final class MovieQuizViewController: UIViewController {
                 guard let self = self else { return }
                 self.presenter.restartGame()
                 presenter.restartGame()
-                
-            }
-        )
-        
-        // Передаём модель в AlertPresenter
+                }
+    )
         alertPresenter.showAlert(with: alertModel)
     }
     
     // MARK: - Properies
-    //Здесь объявляются свойства, необходимые для управления состоянием
-    
-    //Показываем индикатор загрузки и его состояния
     func showLoadingIndicator() {
-        activityIndicator.isHidden = false // говорим, что индикатор загрузки не скрыт
-        activityIndicator.startAnimating() // включаем анимацию
+        activityIndicator.isHidden = false
+        activityIndicator.startAnimating()
     }
-    //Скрываем индикатор загрузки
+    
     func hideLoadingIndicator() {
         activityIndicator.isHidden = true
         activityIndicator.stopAnimating()
     }
-    //Алерт с ошибкой
+    
     func showNetworkError(message: String) {
         hideLoadingIndicator()
         
@@ -115,16 +80,10 @@ final class MovieQuizViewController: UIViewController {
             buttonText: "Попробовать еще раз") { [weak self] in
                 guard let self = self else { return }
                 
-                self.presenter.restartGame()
-                //presenter.restartGame()
-                
-            }
-        
+            self.presenter.restartGame()
+      }
         alertPresenter.showAlert(with: model)
-    }
-    
-    //добавили alertPresenter
-    private var alertPresenter: AlertPresenter!
+  }
 }
     
  
