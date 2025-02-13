@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 
+
 final class MovieQuizPresenter {
     
     let questionsAmount: Int = 10
@@ -24,7 +25,7 @@ final class MovieQuizPresenter {
             currentQuestionIndex == questionsAmount - 1
         }
         
-    func resetQuestionIndex() {
+    func restartGame() {
             currentQuestionIndex = 0
             correctAnswers = 0 // обнуляем счётчик при перезапуске викторины
         }
@@ -32,6 +33,12 @@ final class MovieQuizPresenter {
     func switchToNextQuestion() {
             currentQuestionIndex += 1
         }
+    
+    func didAnswer(isCorrectAnswer: Bool) { // новый метод
+          if isCorrectAnswer {
+              correctAnswers += 1
+          }
+      }
     
     func showNextQuestionOrResults() { // новый метод
             if self.isLastQuestion() {
