@@ -12,21 +12,58 @@ final class MovieQuizPresenter {
     
     let questionsAmount: Int = 10
     private var currentQuestionIndex = 0
+    var currentQuestion: QuizQuestion?
+    weak var viewController: MovieQuizViewController?
+
+    var correctAnswers: Int = 0 // добавлено
+    var questionFactory: QuestionFactoryProtocol? // добавлено
+
+   
     
     func isLastQuestion() -> Bool {
             currentQuestionIndex == questionsAmount - 1
         }
         
-        func resetQuestionIndex() {
+    func resetQuestionIndex() {
             currentQuestionIndex = 0
+            correctAnswers = 0 // обнуляем счётчик при перезапуске викторины
         }
         
-        func switchToNextQuestion() {
+    func switchToNextQuestion() {
             currentQuestionIndex += 1
         }
     
+    func showNextQuestionOrResults() { // новый метод
+            if self.isLastQuestion() {
+                let text = "Вы ответили на \(correctAnswers) из \(questionsAmount), попробуйте ещё раз!"
+
+                let viewModel = QuizResultsViewModel(
+                    title: "Этот раунд окончен!",
+                    text: text,
+                    buttonText: "Сыграть ещё раз")
+                
+                viewController?.showResults(quiz: viewModel) // исправлено, теперь вызываем через viewController
+            } else {
+                self.switchToNextQuestion()
+                questionFactory?.requestNextQuestion() // исправлено, используем questionFactory
+            }
+        }
     
-     func convert(model: QuizQuestion) ->  QuizStepViewModel {
+    func didReceiveNextQuestion(question: QuizQuestion?) { // новый метод
+         guard let question = question else {
+             return
+         }
+         
+         currentQuestion = question
+         let viewModel = convert(model: question)
+         DispatchQueue.main.async { [weak self] in
+             self?.viewController?.show(quiz: viewModel)
+         }
+     }
+    
+    
+     
+    func convert(model: QuizQuestion) ->  QuizStepViewModel {
                 return QuizStepViewModel(
                        image: UIImage(data: model.image) ?? UIImage(),
                        question: model.text,
@@ -34,30 +71,24 @@ final class MovieQuizPresenter {
             }
     
     
-    var currentQuestion: QuizQuestion?
-    weak var viewController: MovieQuizViewController?
     
+    // MARK: - Buttons
     func yesButtonClicked(){
-        guard let currentQuestion = currentQuestion else {
-                return
-            }
-            let givenAnswer = true
-            
-        viewController?.showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+        didAnswer(isYes: true)
     
         }
     
     func noButtonClicked() {
-        guard let currentQuestion = currentQuestion else {
-            return
-        }
-        let givenAnswer = false
-        
-        viewController?.showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+        didAnswer(isYes: false)
     }
     
+    private func didAnswer(isYes: Bool) { // новый метод
+            guard let currentQuestion = currentQuestion else {
+                return
+            }
+            
+            viewController?.showAnswerResult(isCorrect: isYes == currentQuestion.correctAnswer)
+        }
     
-    
-    
-    
+ 
 }
