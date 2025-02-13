@@ -20,8 +20,6 @@ final class MovieQuizViewController: UIViewController {
         super.viewDidLoad()
         presenter = MovieQuizPresenter(viewController: self)
         
-        // Инициализируем statisticService
-        statisticService = StatisticService()
         // Инициализируем AlertPresenter
         alertPresenter = AlertPresenter(viewController: self)
         
@@ -70,42 +68,38 @@ final class MovieQuizViewController: UIViewController {
     
     
     func showResults(quiz result: QuizResultsViewModel) {
-        if let statisticService = statisticService {
-            statisticService.store(correct: presenter.correctAnswers, total: presenter.questionsAmount)
-            
-            // Данные статистики
-            let record = statisticService.bestGame
-            let gamesPlayed = statisticService.gamesCount
-            let averageAccuracy = statisticService.totalAccuracy
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateStyle = .medium
-            dateFormatter.timeStyle = .short
-            let formattedDate = dateFormatter.string(from: record.date)
-            
-            let message = """
-            Ваш результат: \(presenter.correctAnswers)/\(presenter.questionsAmount)
-            Количество сыгранных квизов: \(gamesPlayed)
-            Рекорд: \(record.correct)/\(record.total) \(formattedDate)
-            Средняя точность: \(String(format: "%.2f", averageAccuracy))%
-            """
-            
-            // Создаём модель для AlertPresenter
-            let alertModel = AlertModel(
-                title: result.title,
-                message: message,
-                buttonText: result.buttonText,
-                completion: { [weak self] in
-                    guard let self = self else { return }
-                    self.presenter.restartGame()
-                    presenter.restartGame()
-            
-                }
-            )
-            
-            // Передаём модель в AlertPresenter
-            alertPresenter.showAlert(with: alertModel)
-        }
+        /* УДАЛИМ ЭТО
+         if let statisticService = statisticService {
+         statisticService.store(correct: presenter.correctAnswers, total: presenter.questionsAmount)
+         
+         // Данные статистики
+         let record = statisticService.bestGame
+         let gamesPlayed = statisticService.gamesCount
+         let averageAccuracy = statisticService.totalAccuracy
+         let dateFormatter = DateFormatter()
+         dateFormatter.dateStyle = .medium
+         dateFormatter.timeStyle = .short
+         let formattedDate = dateFormatter.string(from: record.date)
+         */
+        let message = presenter.makeResultsMessage() // исправлено, теперь Presenter формирует текст
+        
+        // Создаём модель для AlertPresenter
+        let alertModel = AlertModel(
+            title: result.title,
+            message: message,
+            buttonText: result.buttonText,
+            completion: { [weak self] in
+                guard let self = self else { return }
+                self.presenter.restartGame()
+                presenter.restartGame()
+                
+            }
+        )
+        
+        // Передаём модель в AlertPresenter
+        alertPresenter.showAlert(with: alertModel)
     }
+    
     // MARK: - Properies
     //Здесь объявляются свойства, необходимые для управления состоянием
     
@@ -127,33 +121,23 @@ final class MovieQuizViewController: UIViewController {
             title: "Ошибка",
             message: message,
             buttonText: "Попробовать еще раз") { [weak self] in
-            guard let self = self else { return }
-            
-            self.presenter.restartGame()
-            //presenter.restartGame()
-            
-        }
+                guard let self = self else { return }
+                
+                self.presenter.restartGame()
+                //presenter.restartGame()
+                
+            }
         
         alertPresenter.showAlert(with: model)
     }
     
-    //добавляем свойство типа StatisticServiceProtocol
-    private var statisticService: StatisticServiceProtocol!
-    //массив вопросов викторины вынесли в QuizFactory
-    
-    
-    
     //добавили alertPresenter
     private var alertPresenter: AlertPresenter!
+}
     
-    
-    
-    
-    
-    // MARK: - QuestionFactoryDelegate
+ 
   
     
-}
 
         
     

@@ -14,13 +14,22 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     weak var viewController: MovieQuizViewController?
     
 init(viewController: MovieQuizViewController) {
-        self.viewController = viewController
-        
+    self.viewController = viewController
+    
+    statisticService = StatisticService()
+    
     questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
     viewController.showLoadingIndicator()
     questionFactory?.loadData()
-    
     }
+    
+    
+    let questionsAmount: Int = 10
+    private var currentQuestionIndex = 0
+    var currentQuestion: QuizQuestion?
+    var correctAnswers: Int = 0 // добавлено
+    private let statisticService: StatisticServiceProtocol! // добавлено
+    
     
     func didLoadDataFromServer() {
             viewController?.hideLoadingIndicator()
@@ -32,16 +41,25 @@ init(viewController: MovieQuizViewController) {
             viewController?.showNetworkError(message: message)
         }
 
-    
-    
-    
-    let questionsAmount: Int = 10
-    private var currentQuestionIndex = 0
-    var currentQuestion: QuizQuestion?
-    
+    func makeResultsMessage() -> String { // новый метод
+        statisticService.store(correct: correctAnswers, total: questionsAmount)
 
-    var correctAnswers: Int = 0 // добавлено
+        let bestGame = statisticService.bestGame
 
+        let totalPlaysCountLine = "Количество сыгранных квизов: \(statisticService.gamesCount)"
+        let currentGameResultLine = "Ваш результат: \(correctAnswers)/\(questionsAmount)"
+        let bestGameInfoLine = "Рекорд: \(bestGame.correct)/\(bestGame.total)"
+        + " (\(bestGame.date.dateTimeString))"
+        let averageAccuracyLine = "Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%"
+
+        let resultMessage = [
+            currentGameResultLine, totalPlaysCountLine, bestGameInfoLine, averageAccuracyLine
+        ].joined(separator: "\n")
+
+        return resultMessage
+    }
+    
+    
    
     
     func isLastQuestion() -> Bool {
