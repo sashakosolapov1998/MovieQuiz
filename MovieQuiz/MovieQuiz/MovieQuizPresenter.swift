@@ -9,15 +9,38 @@ import Foundation
 import UIKit
 
 
-final class MovieQuizPresenter {
+final class MovieQuizPresenter: QuestionFactoryDelegate {
+    var questionFactory: QuestionFactoryProtocol? // добавлено
+    weak var viewController: MovieQuizViewController?
+    
+init(viewController: MovieQuizViewController) {
+        self.viewController = viewController
+        
+    questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+    viewController.showLoadingIndicator()
+    questionFactory?.loadData()
+    
+    }
+    
+    func didLoadDataFromServer() {
+            viewController?.hideLoadingIndicator()
+            questionFactory?.requestNextQuestion()
+        }
+
+    func didFailToLoadData(with error: Error) {
+            let message = error.localizedDescription
+            viewController?.showNetworkError(message: message)
+        }
+
+    
+    
     
     let questionsAmount: Int = 10
     private var currentQuestionIndex = 0
     var currentQuestion: QuizQuestion?
-    weak var viewController: MovieQuizViewController?
+    
 
     var correctAnswers: Int = 0 // добавлено
-    var questionFactory: QuestionFactoryProtocol? // добавлено
 
    
     
@@ -27,7 +50,8 @@ final class MovieQuizPresenter {
         
     func restartGame() {
             currentQuestionIndex = 0
-            correctAnswers = 0 // обнуляем счётчик при перезапуске викторины
+            correctAnswers = 0
+        questionFactory?.requestNextQuestion()// обнуляем счётчик при перезапуске викторины
         }
         
     func switchToNextQuestion() {

@@ -2,7 +2,7 @@ import UIKit
 
     // MARK: - Controller
     // управляет отображением текущего вопроса, реагирует на нажатия кнопок и обновляет интерфейс в зависимости от действий пользователя.
-final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
+final class MovieQuizViewController: UIViewController {
     
     
     // MARK: - Outlets
@@ -13,10 +13,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     @IBOutlet private var counterLabel: UILabel!
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
     
+    private var presenter: MovieQuizPresenter!
+    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        presenter.viewController = self
+        presenter = MovieQuizPresenter(viewController: self)
         
         // Инициализируем statisticService
         statisticService = StatisticService()
@@ -25,10 +27,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         
         imageView.contentMode = .scaleAspectFill
         
-        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
-        
-        showLoadingIndicator()
-        questionFactory.loadData()
     }
     
     
@@ -44,9 +42,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     // MARK: - Private functions
     
-    func didReceiveNextQuestion(question: QuizQuestion?) { // изменено
-        presenter.didReceiveNextQuestion(question: question)
-    }
+    
     func show(quiz step: QuizStepViewModel){
         imageView.image = step.image
         textLabel.text = step.question
@@ -67,7 +63,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         
         // запускаем задачу через 1 секунду с помощью диспетчера задач
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in guard let self = self else { return }
-            self.presenter.questionFactory = self.questionFactory // исправлено, передаём в Presenter
             self.presenter.showNextQuestionOrResults()
         }
         
@@ -103,7 +98,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
                     guard let self = self else { return }
                     self.presenter.restartGame()
                     presenter.restartGame()
-                    self.questionFactory.requestNextQuestion()
+            
                 }
             )
             
@@ -137,7 +132,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             self.presenter.restartGame()
             //presenter.restartGame()
             
-            self.questionFactory.requestNextQuestion()
         }
         
         alertPresenter.showAlert(with: model)
@@ -147,27 +141,17 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var statisticService: StatisticServiceProtocol!
     //массив вопросов викторины вынесли в QuizFactory
     
-    private var questionFactory: QuestionFactoryProtocol!
     
     
     //добавили alertPresenter
     private var alertPresenter: AlertPresenter!
     
-    private var presenter = MovieQuizPresenter()
     
     
     
     
     // MARK: - QuestionFactoryDelegate
-    
-    func didLoadDataFromServer() {
-        activityIndicator.isHidden = true // скрываем индикатор загрузки
-        questionFactory.requestNextQuestion()
-    }
-    
-    func didFailToLoadData(with error: Error) {
-        showNetworkError(message: error.localizedDescription) // возьмём в качестве сообщения описание ошибки
-    }
+  
     
 }
 
