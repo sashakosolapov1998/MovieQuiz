@@ -50,7 +50,7 @@ final class MovieQuizViewController: UIViewController {
         imageView.layer.borderColor = UIColor.clear.cgColor
     }
     
-    
+    /* УДАЛИМ ЭТОТ МЕТОД
     func showAnswerResult(isCorrect: Bool) {
         presenter.didAnswer(isCorrectAnswer: isCorrect)
         
@@ -63,24 +63,16 @@ final class MovieQuizViewController: UIViewController {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in guard let self = self else { return }
             self.presenter.showNextQuestionOrResults()
         }
-        
+    }
+    */
+    func highlightImageBorder(isCorrectAnswer: Bool) { // новый метод
+        imageView.layer.masksToBounds = true
+        imageView.layer.borderWidth = 8
+        imageView.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
     }
     
-    
     func showResults(quiz result: QuizResultsViewModel) {
-        /* УДАЛИМ ЭТО
-         if let statisticService = statisticService {
-         statisticService.store(correct: presenter.correctAnswers, total: presenter.questionsAmount)
-         
-         // Данные статистики
-         let record = statisticService.bestGame
-         let gamesPlayed = statisticService.gamesCount
-         let averageAccuracy = statisticService.totalAccuracy
-         let dateFormatter = DateFormatter()
-         dateFormatter.dateStyle = .medium
-         dateFormatter.timeStyle = .short
-         let formattedDate = dateFormatter.string(from: record.date)
-         */
+      
         let message = presenter.makeResultsMessage() // исправлено, теперь Presenter формирует текст
         
         // Создаём модель для AlertPresenter

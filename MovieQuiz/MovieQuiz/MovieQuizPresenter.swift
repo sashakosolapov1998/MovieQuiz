@@ -58,7 +58,16 @@ init(viewController: MovieQuizViewController) {
 
         return resultMessage
     }
-    
+    func proceedWithAnswer(isCorrectAnswer: Bool) { // новый метод (было showAnswerResult)
+        didAnswer(isCorrectAnswer: isCorrectAnswer) // фиксируем ответ
+
+        viewController?.highlightImageBorder(isCorrectAnswer: isCorrectAnswer) // вызываем UI-метод
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self = self else { return }
+            self.proceedToNextQuestionOrResults() // вызываем следующий шаг
+        }
+    }
     
    
     
@@ -82,7 +91,7 @@ init(viewController: MovieQuizViewController) {
           }
       }
     
-    func showNextQuestionOrResults() { // новый метод
+    func proceedToNextQuestionOrResults() { // новый метод
             if self.isLastQuestion() {
                 let text = "Вы ответили на \(correctAnswers) из \(questionsAmount), попробуйте ещё раз!"
 
@@ -136,7 +145,7 @@ init(viewController: MovieQuizViewController) {
                 return
             }
             
-            viewController?.showAnswerResult(isCorrect: isYes == currentQuestion.correctAnswer)
+        proceedWithAnswer(isCorrectAnswer: isYes == currentQuestion.correctAnswer)
         }
     
  
